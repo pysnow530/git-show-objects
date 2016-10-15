@@ -19,13 +19,16 @@ class Blob(Base):
     @classmethod
     def load_from_cat_file(cls, hash, output):
         """从cat-file的输出加载"""
-        object = cls()
-        object.hash = hash
-        object.content = output
-        return object
+        object_ = cls()
+        object_.hash = hash
+        object_.content = output
+        return object_
 
     def __str__(self):
-        return '<blob: %s>' % (self.content,)
+        if len(self.content) <= 6:
+            return self.content
+        else:
+            return self.content[:3] + '...'
 
 
 class Tree(Base):
@@ -45,17 +48,18 @@ class Tree(Base):
     @classmethod
     def load_from_cat_file(cls, hash, output):
         """从cat-file的输出加载"""
-        object = Tree()
+        object_ = Tree()
+        object_.hash = hash
         for line in output.split('\n'):
             entry = Tree.Entry()
             entry.mode, entry.type, info = line.split(' ', 2)
             entry.hash, entry.fname = info.split('\t')
-            object.entries.append(entry)
-        return object
+            object_.entries.append(entry)
+        return object_
 
 
     def __str__(self):
-        return '<tree: %s..>' % (str(self.entries[0]))
+        return '%d entries' % (len(self.entries),)
 
 
 class Commit(Base):
@@ -69,20 +73,23 @@ class Commit(Base):
     @classmethod
     def load_from_cat_file(cls, hash, output):
         """从cat-file的输出加载"""
-        object = cls()
-        object.hash = hash
-        info, object.message = output.split('\n\n')
+        object_ = cls()
+        object_.hash = hash
+        info, object_.message = output.split('\n\n')
         for line in info.split('\n'):
             key, val = line.split(' ', 1)
-            if type(getattr(object, key)) is list:
-                new_val = getattr(object, key) + [val]
+            if type(getattr(object_, key)) is list:
+                new_val = getattr(object_, key) + [val]
             else:
                 new_val = val
-            setattr(object, key, new_val)
-        return object
+            setattr(object_, key, new_val)
+        return object_
 
     def __str__(self):
-        return '<commit: %s>' % (self.message,)
+        if len(self.message) <= 6:
+            return self.message
+        else:
+            return self.message[:3] + '...'
 
 
 def get_object_by_hash(hash):
@@ -90,9 +97,9 @@ def get_object_by_hash(hash):
     type = commands.getoutput('git cat-file -t %s' % (hash,))
     output = commands.getoutput('git cat-file -p %s' % (hash,))
     cls = {'blob': Blob, 'tree': Tree, 'commit': Commit}[type]
-    object = cls.load_from_cat_file(hash, output)
+    object_ = cls.load_from_cat_file(hash, output)
 
-    return object
+    return object_
 
 
 def get_objects():
@@ -112,7 +119,24 @@ def get_objects():
 
 def objects2dot(objects, dotfile):
     """将对象列表及关系转换为dot文件"""
-    pass
+    dot = 'digraph {\n'
+    for object_ in objects:
+        if isinstance(object_, Blob):
+            dot += '\thash_%s[shape=note, label="%s"];\n' % (object_.hash, str(object_))
+        elif isinstance(object_, Tree):
+            dot += '\thash_%s[shape=note, fontcolor="#2a77c0", label="%s"];\n' % (object_.hash, str(object_))
+            for entry in object_.entries:
+                dot += '\thash_%s -> hash_%s;\n' % (object_.hash, entry.hash)
+        elif isinstance(object_, Commit):
+            dot += '\thash_%s[shape=box, style=filled, fillcolor=orange, label="%s"];\n' % (object_.hash, str(object_))
+            for parent_hash in object_.parent:
+                dot += '\thash_%s -> hash_%s;\n' % (object_.hash, parent_hash)
+            dot += '\thash_%s -> hash_%s;\n' % (object_.hash, object_.tree)
+    dot += '}'
+
+    open(dotfile, 'w+').write(dot)
+
+    return dot
 
 
 def dot2png(dotfile, pngfile):
