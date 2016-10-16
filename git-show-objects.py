@@ -20,6 +20,11 @@ class Base(object):
     """对象基类"""
     hash = None
 
+    @property
+    def short_hash(self):
+        """获取短hash"""
+        return self.hash[:6]
+
 
 class Blob(Base):
     """blob对象"""
@@ -35,14 +40,14 @@ class Blob(Base):
 
     def __str__(self):
         if len(self.content) <= 6:
-            return self.content
+            return '%s: %s' % (self.short_hash, self.content)
         else:
-            return self.content[:3] + '...'
+            return '%s: %s' % (self.short_hash, self.content[:3] + '...')
 
 
 class Tree(Base):
     """tree对象"""
-    entries = []
+    entries = None
 
     class Entry(object):
         """tree对象条目"""
@@ -59,22 +64,24 @@ class Tree(Base):
         """从cat-file的输出加载"""
         object_ = Tree()
         object_.hash = hash
+        object_.entries = []
         for line in output.split('\n'):
             entry = Tree.Entry()
             entry.mode, entry.type, info = line.split(' ', 2)
             entry.hash, entry.fname = info.split('\t')
+            logging.debug('%s: add entry %s' % (object_.hash, entry.hash))
             object_.entries.append(entry)
         return object_
 
 
     def __str__(self):
-        return '%d entries' % (len(self.entries),)
+        return '%s: %d entries' % (self.short_hash, len(self.entries),)
 
 
 class Commit(Base):
     """commit对象"""
     tree = None
-    parent = []
+    parent = None
     author = None
     committer = None
     message = None
@@ -84,21 +91,28 @@ class Commit(Base):
         """从cat-file的输出加载"""
         object_ = cls()
         object_.hash = hash
+        object_.parent = []
+        object_.message = ''
         info, object_.message = output.split('\n\n')
         for line in info.split('\n'):
             key, val = line.split(' ', 1)
-            if type(getattr(object_, key)) is list:
-                new_val = getattr(object_, key) + [val]
+            if key == 'tree':
+                object_.tree = val
+            elif key == 'parent':
+                object_.parent.append(val)
+            elif key == 'author':
+                object_.author = val
+            elif key == 'committer':
+                object_.cmmitter = val
             else:
-                new_val = val
-            setattr(object_, key, new_val)
+                object_.message += val
         return object_
 
     def __str__(self):
         if len(self.message) <= 6:
-            return self.message
+            return '%s: %s' % (self.short_hash, self.message)
         else:
-            return self.message[:3] + '...'
+            return '%s: %s' % (self.short_hash, self.message[:3] + '...')
 
 
 def get_object_by_hash(hash):
