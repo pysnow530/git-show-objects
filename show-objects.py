@@ -2,9 +2,18 @@
 # -*- coding: utf-8 -*-
 import os
 import commands
+import logging
 
 
 OBJECT_PATH = '.git/objects/'
+
+
+logging.basicConfig(
+    filename='show-objects.log',
+    fliemode='a+',
+    level=logging.DEBUG,
+    format='[%(asctime)s] %(levelname)s %(message)s',
+)
 
 
 class Base(object):
@@ -141,7 +150,12 @@ def objects2dot(objects, dotfile):
 
 def dot2png(dotfile, pngfile):
     """将dot文件转换为png文件"""
-    pass
+    root, ext = os.path.splitext(dotfile)
+    pngfile = root + '.png'
+    output = commands.getoutput('dot -Tpng %s >%s' % (dotfile, pngfile))
+    logging.debug(output)
+
+    return pngfile
 
 
 def main(dotfile, pngfile):
