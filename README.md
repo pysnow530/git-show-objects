@@ -2,6 +2,8 @@
 
 > git-objects是git的一个扩展命令，旨在展示git中的objects及其相互关系。
 
+> 现在还不支持解析gc后的压缩包。
+
 ## features
 
 * [*] 支持对象的显示
