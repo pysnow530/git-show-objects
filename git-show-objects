@@ -1,13 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
+import sys
 import time
+import traceback
 import logging
 import commands
 
 
 OBJECT_PATH = '.git/objects/'
 EXPORT_PATH = '.git/obs/'
+
+
+def error(errmsg):
+    """打印错误并退出"""
+    print >>sys.stderr, 'fatal: ' + errmsg
+    sys.exit(1)
 
 
 def init():
@@ -18,7 +26,7 @@ def init():
 
         new_cwd = os.getcwd()
         if old_cwd == new_cwd:
-            raise Exception('Not a git repository (or any of the parent directories): .git')
+            error('Not a git repository (or any of the parent directories): .git')
 
         old_cwd = new_cwd
 
@@ -209,4 +217,8 @@ if __name__ == '__main__':
     dotfile = os.path.join(EXPORT_PATH, 'objects.dot')
     pngfile = os.path.join(EXPORT_PATH, 'objects_%d.png' % (ts,))
 
-    main(dotfile, pngfile)
+    try:
+        main(dotfile, pngfile)
+    except Exception as e:
+        logging.error(traceback.format_exc(e))
+        error(str(e))
