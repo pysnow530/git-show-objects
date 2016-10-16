@@ -1,18 +1,18 @@
-# git-objects自述文档
+# git-show-objects readme
 
-> git-objects是git的一个扩展命令，旨在展示git中的objects及其相互关系。
+> Git-show-objects is a extend git command, it aims to visualize git objects and it's relationship.
 
-> 现在还不支持解析gc后的压缩包。
+> Decompress gc pack is not supported yet.
 
-## 依赖
+## dependencies
 
-* ImageMagic 用来将生成的dot文件转化为png图片
-* open 打开png图片预览
+* ImageMagic: translate dot file to png file
+* open: mac command, for view png file
 
-## 特性
+## features
 
-* [*] 支持对象的显示
-* [*] 支持对象关系的显示
-* [*] 支持生成png并显示
-* [ ] 支持index显示
-* [ ] 支持分支显示
+* [*] draw objects
+* [*] draw objects relationship
+* [*] export png and view
+* [ ] draw index and relationship with objects
+* [ ] draw branch and relationship with objects
