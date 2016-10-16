@@ -7,6 +7,7 @@ import commands
 
 
 OBJECT_PATH = '.git/objects/'
+EXPORT_PATH = '.git/obs/'
 
 
 logging.basicConfig(
@@ -116,12 +117,30 @@ class Commit(Base):
             return '%s: %s' % (self.short_hash, self.message[:3] + '...')
 
 
+def init():
+    """初始化工作：切换到工作目录，创建输出目录"""
+    old_cwd = os.getcwd()
+    while not os.path.isdir('.git'):
+        os.chdir('..')
+
+        new_cwd = os.getcwd()
+        if old_cwd == new_cwd:
+            raise Exception('Not a git repository (or any of the parent directories): .git')
+
+        old_cwd = new_cwd
+
+    if not os.path.isdir(EXPORT_PATH):
+        os.mkdir(EXPORT_PATH)
+
+
 def get_object_by_hash(hash):
     """通过hash获取git对象"""
     type = commands.getoutput('git cat-file -t %s' % (hash,))
-    output = commands.getoutput('git cat-file -p %s' % (hash,))
     cls = {'blob': Blob, 'tree': Tree, 'commit': Commit}[type]
-    object_ = cls.load_from_cat_file(hash, output)
+
+    content = commands.getoutput('git cat-file -p %s' % (hash,))
+
+    object_ = cls.load_from_cat_file(hash, content)
 
     return object_
 
@@ -166,9 +185,10 @@ def objects2dot(objects, dotfile):
 def dot2png(dotfile, pngfile):
     """将dot文件转换为png文件"""
     root, ext = os.path.splitext(dotfile)
-    pngfile = root + '.png'
-    output = commands.getoutput('dot -Tpng %s >%s' % (dotfile, pngfile))
-    logging.debug(output)
+    cmd = 'dot -Tpng %s >%s' % (dotfile, pngfile)
+
+    output = commands.getoutput(cmd)
+    logging.debug('cmd: %s, output: %s' % (cmd, output))
 
     return pngfile
 
@@ -181,9 +201,9 @@ def main(dotfile, pngfile):
 
 
 if __name__ == '__main__':
-    os.mkdir('.git/ob/')
+    init()
 
     ts = time.time()
-    dotfile = '.git/ob/objects_%d.dot' % (ts,)
-    pngfile = '.git/ob/objects_%d.png' % (ts,)
+    dotfile = os.path.join(EXPORT_PATH, 'objects.dot')
+    pngfile = os.path.join(EXPORT_PATH, 'objects_%d.png' % (ts,))
     main(dotfile, pngfile)
