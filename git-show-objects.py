@@ -194,15 +194,22 @@ def dot2png(dotfile, pngfile):
     return pngfile
 
 
+def view(pngfile):
+    """查看图片"""
+    os.system('open %s' % (pngfile,))
+
+
 def main(dotfile, pngfile):
     """主函数"""
     objects = get_objects()
     objects2dot(objects, dotfile)
     dot2png(dotfile, pngfile)
+    view(pngfile)
 
 
 if __name__ == '__main__':
     ts = time.time()
     dotfile = os.path.join(EXPORT_PATH, 'objects.dot')
     pngfile = os.path.join(EXPORT_PATH, 'objects_%d.png' % (ts,))
+
     main(dotfile, pngfile)
