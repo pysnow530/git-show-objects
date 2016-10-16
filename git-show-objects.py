@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import os
-import commands
+import time
 import logging
+import commands
 
 
 OBJECT_PATH = '.git/objects/'
@@ -180,4 +181,9 @@ def main(dotfile, pngfile):
 
 
 if __name__ == '__main__':
-    main('objects.dot', 'objects.png')
+    os.mkdir('.git/ob/')
+
+    ts = time.time()
+    dotfile = '.git/ob/objects_%d.dot' % (ts,)
+    pngfile = '.git/ob/objects_%d.png' % (ts,)
+    main(dotfile, pngfile)
