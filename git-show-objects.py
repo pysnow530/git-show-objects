@@ -10,8 +10,25 @@ OBJECT_PATH = '.git/objects/'
 EXPORT_PATH = '.git/obs/'
 
 
+def init():
+    """初始化工作：切换到工作目录，创建输出目录"""
+    old_cwd = os.getcwd()
+    while not os.path.isdir('.git'):
+        os.chdir('..')
+
+        new_cwd = os.getcwd()
+        if old_cwd == new_cwd:
+            raise Exception('Not a git repository (or any of the parent directories): .git')
+
+        old_cwd = new_cwd
+
+    if not os.path.isdir(EXPORT_PATH):
+        os.mkdir(EXPORT_PATH)
+init()
+
+
 logging.basicConfig(
-    filename='show-objects.log',
+    filename=os.path.join(EXPORT_PATH, 'show-objects.log'),
     fliemode='a+',
     level=logging.DEBUG,
     format='[%(asctime)s] %(levelname)s %(message)s',
@@ -117,22 +134,6 @@ class Commit(Base):
             return '%s: %s' % (self.short_hash, self.message[:3] + '...')
 
 
-def init():
-    """初始化工作：切换到工作目录，创建输出目录"""
-    old_cwd = os.getcwd()
-    while not os.path.isdir('.git'):
-        os.chdir('..')
-
-        new_cwd = os.getcwd()
-        if old_cwd == new_cwd:
-            raise Exception('Not a git repository (or any of the parent directories): .git')
-
-        old_cwd = new_cwd
-
-    if not os.path.isdir(EXPORT_PATH):
-        os.mkdir(EXPORT_PATH)
-
-
 def get_object_by_hash(hash):
     """通过hash获取git对象"""
     type = commands.getoutput('git cat-file -t %s' % (hash,))
@@ -201,8 +202,6 @@ def main(dotfile, pngfile):
 
 
 if __name__ == '__main__':
-    init()
-
     ts = time.time()
     dotfile = os.path.join(EXPORT_PATH, 'objects.dot')
     pngfile = os.path.join(EXPORT_PATH, 'objects_%d.png' % (ts,))
