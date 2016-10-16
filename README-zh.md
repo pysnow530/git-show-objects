@@ -21,17 +21,17 @@
 
 1. 克隆仓库
 
-    git clone git@github.com:pysnow530/git-show-objects.git
+        git clone git@github.com:pysnow530/git-show-objects.git
 
 2. 将仓库目录添加到PATH
 
-    # 将仓库目录添加到PATH环境变量
-    echo 'export $PATH=REPO_PATH:$PATH' >>~/.profile
+        # 将仓库目录添加到PATH环境变量
+        echo 'export $PATH=REPO_PATH:$PATH' >>~/.profile
 
-    # 或者做个软链
-    ln -s REPO_PATH/git-show-objects /usr/local/bin/
+        # 或者做个软链
+        ln -s REPO_PATH/git-show-objects /usr/local/bin/
 
 3. 使用
 
-    cd some_repo
-    git show-objects
+        cd some_repo
+        git show-objects
