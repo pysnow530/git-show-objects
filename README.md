@@ -17,6 +17,10 @@
 * [ ] draw index and relationship with objects
 * [ ] draw branch and relationship with objects
 
+## snapshot
+
+![objects.png](snapshot/objects.png)
+
 ## install
 
 1. clone the repo

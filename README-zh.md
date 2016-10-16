@@ -17,6 +17,10 @@
 * [ ] 支持index显示
 * [ ] 支持分支显示
 
+## 截图
+
+![objects.png](snapshot/objects.png)
+
 ## 安装
 
 1. 克隆仓库
