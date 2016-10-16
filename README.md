@@ -16,3 +16,22 @@
 * [x] export png and view
 * [ ] draw index and relationship with objects
 * [ ] draw branch and relationship with objects
+
+## install
+
+1. clone the repo
+
+    git clone git@github.com:pysnow530/git-show-objects.git
+
+2. add repo to path
+
+    # add repo path to PATH environment
+    echo 'export $PATH=REPO_PATH:$PATH' >>~/.profile
+
+    # or link REPO_PATH/git-show-objects to bin
+    ln -s REPO_PATH/git-show-objects /usr/local/bin/
+
+3. use it
+
+    cd some_repo
+    git show-objects
