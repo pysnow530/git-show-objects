@@ -11,8 +11,8 @@
 
 ## features
 
-* [*] draw objects
-* [*] draw objects relationship
-* [*] export png and view
+* [x] draw objects
+* [x] draw objects relationship
+* [x] export png and view
 * [ ] draw index and relationship with objects
 * [ ] draw branch and relationship with objects
