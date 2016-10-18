@@ -14,7 +14,7 @@
 * [x] draw objects
 * [x] draw objects relationship
 * [x] export png and view
-* [ ] draw index and relationship with objects
+* [x] draw index and relationship with objects
 * [ ] draw branch and relationship with objects
 
 ## snapshot
