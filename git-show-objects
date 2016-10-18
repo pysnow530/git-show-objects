@@ -12,13 +12,13 @@ OBJECT_PATH = '.git/objects/'
 EXPORT_PATH = '.git/obs/'
 
 
-def error(errmsg):
+def _error(errmsg):
     """打印错误并退出"""
     print >>sys.stderr, 'fatal: ' + errmsg
     sys.exit(1)
 
 
-def init():
+def _init():
     """初始化工作：切换到工作目录，创建输出目录"""
     old_cwd = os.getcwd()
     while not os.path.isdir('.git'):
@@ -26,13 +26,13 @@ def init():
 
         new_cwd = os.getcwd()
         if old_cwd == new_cwd:
-            error('Not a git repository (or any of the parent directories): .git')
+            _error('Not a git repository (or any of the parent directories): .git')
 
         old_cwd = new_cwd
 
     if not os.path.isdir(EXPORT_PATH):
         os.mkdir(EXPORT_PATH)
-init()
+_init()
 
 
 logging.basicConfig(
@@ -232,4 +232,4 @@ if __name__ == '__main__':
         main(dotfile, pngfile)
     except Exception as e:
         logging.error(traceback.format_exc(e))
-        error(str(e))
+        _error(str(e))
