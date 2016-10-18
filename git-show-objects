@@ -43,8 +43,11 @@ logging.basicConfig(
 )
 
 
-class Base(object):
-    """对象基类"""
+class ImmutableObject(object):
+    """对象基类
+    Git中的对象都是immutable的，也就是说对象一旦创建就不能修改。
+    对象对其属性序列化的，并hash得到唯一标识。
+    具有相同属性的对象，hash的结果相同，所以可以共用同一对象。"""
     hash = None
 
     @property
@@ -52,13 +55,32 @@ class Base(object):
         """获取短hash"""
         return self.hash[:6]
 
+    @staticmethod
+    def unserialize(hash):
+        """反序列化对象文件得到对象
+        objpath 对象文件路径"""
+        type = commands.getoutput('git cat-file -t %s' % (hash,))
+        cls = {'blob': Blob, 'tree': Tree, 'commit': Commit}[type]
 
-class Blob(Base):
-    """blob对象"""
+        content = commands.getoutput('git cat-file -p %s' % (hash,))
+
+        object_ = cls.loads(hash, content)
+
+        return object_
+
+    @classmethod
+    def loads(cls, hash, output):
+        """从hash和输出加载对象"""
+        raise NotImplementedError('Objects should implement loads classmethod!')
+
+
+class Blob(ImmutableObject):
+    """blob对象: 对应文件内容
+    """
     content = None
 
     @classmethod
-    def load_from_cat_file(cls, hash, output):
+    def loads(cls, hash, output):
         """从cat-file的输出加载"""
         object_ = cls()
         object_.hash = hash
@@ -72,8 +94,9 @@ class Blob(Base):
             return '%s: %s' % (self.short_hash, self.content[:3] + '...')
 
 
-class Tree(Base):
-    """tree对象"""
+class Tree(ImmutableObject):
+    """tree对象: 对应目录的内容
+    """
     entries = None
 
     class Entry(object):
@@ -87,7 +110,7 @@ class Tree(Base):
             return self.fname
 
     @classmethod
-    def load_from_cat_file(cls, hash, output):
+    def loads(cls, hash, output):
         """从cat-file的输出加载"""
         object_ = Tree()
         object_.hash = hash
@@ -105,8 +128,8 @@ class Tree(Base):
         return '%s: %d entries' % (self.short_hash, len(self.entries),)
 
 
-class Commit(Base):
-    """commit对象"""
+class Commit(ImmutableObject):
+    """commit对象: 对应某一个具体的提交"""
     tree = None
     parent = None
     author = None
@@ -114,7 +137,7 @@ class Commit(Base):
     message = None
 
     @classmethod
-    def load_from_cat_file(cls, hash, output):
+    def loads(cls, hash, output):
         """从cat-file的输出加载"""
         object_ = cls()
         object_.hash = hash
@@ -139,18 +162,6 @@ class Commit(Base):
         return '%s: %s' % (self.short_hash, self.message)
 
 
-def get_object_by_hash(hash):
-    """通过hash获取git对象"""
-    type = commands.getoutput('git cat-file -t %s' % (hash,))
-    cls = {'blob': Blob, 'tree': Tree, 'commit': Commit}[type]
-
-    content = commands.getoutput('git cat-file -p %s' % (hash,))
-
-    object_ = cls.load_from_cat_file(hash, content)
-
-    return object_
-
-
 def get_objects():
     """获取git的所有对象
     返回对象组成的列表"""
@@ -161,7 +172,7 @@ def get_objects():
         suffixes = os.listdir(os.path.join(OBJECT_PATH, prefix))
         hashes += [prefix + i for i in suffixes if len(i) == 38]
 
-    objects = map(get_object_by_hash, hashes)
+    objects = map(ImmutableObject.unserialize, hashes)
 
     return objects
 
@@ -200,7 +211,7 @@ def dot2png(dotfile, pngfile):
 
 
 def view(pngfile):
-    """查看图片"""
+    """查看生成的树图文件"""
     os.system('open %s' % (pngfile,))
 
 
