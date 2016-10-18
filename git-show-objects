@@ -162,6 +162,34 @@ class Commit(ImmutableObject):
         return '%s: %s' % (self.short_hash, self.message)
 
 
+class Index(object):
+    """index缓冲区: 该对象是一个单例对象
+    index为下一次提交做准备，它保存git跟踪文件及其mode等相关信息的列表"""
+    entries = []
+
+    class Entry(object):
+        """index的条目"""
+        mode = None
+        hash = None
+        stage = None
+        path = None
+
+
+    @classmethod
+    def loads(cls):
+        """从index加载该对象"""
+        object_ = cls()
+
+        output = commands.getoutput('git ls-files --stage')
+        for line in output.split('\n'):
+            entry = cls.Entry()
+            info, entry.path = line.split('\t')
+            entry.mode, entry.hash, entry.stage = info.split(' ')
+            object_.entries.append(entry)
+
+        return object_
+
+
 def get_objects():
     """获取git的所有对象
     返回对象组成的列表"""
@@ -177,9 +205,10 @@ def get_objects():
     return objects
 
 
-def objects2dot(objects, dotfile):
+def objects2dot(index, objects, dotfile):
     """将对象列表及关系转换为dot文件"""
     dot = 'digraph {\n'
+
     for object_ in objects:
         if isinstance(object_, Blob):
             dot += '\thash_%s[shape=note, label="%s"];\n' % (object_.hash, str(object_))
@@ -192,6 +221,12 @@ def objects2dot(objects, dotfile):
             for parent_hash in object_.parent:
                 dot += '\thash_%s -> hash_%s;\n' % (object_.hash, parent_hash)
             dot += '\thash_%s -> hash_%s;\n' % (object_.hash, object_.tree)
+
+    # TODO: index显示为左上角的列表
+    dot += '\tindex[shape=box, label="index"];\n'
+    for entry in index.entries:
+        dot += '\tindex -> hash_%s;\n' % (entry.hash)
+
     dot += '}'
 
     open(dotfile, 'w+').write(dot)
@@ -217,8 +252,9 @@ def view(pngfile):
 
 def main(dotfile, pngfile):
     """主函数"""
+    index = Index.loads()
     objects = get_objects()
-    objects2dot(objects, dotfile)
+    objects2dot(index, objects, dotfile)
     dot2png(dotfile, pngfile)
     view(pngfile)
 
