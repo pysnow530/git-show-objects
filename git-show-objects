@@ -213,19 +213,20 @@ def objects2dot(index, objects, dotfile):
         if isinstance(object_, Blob):
             dot += '\thash_%s[shape=note, label="%s"];\n' % (object_.hash, str(object_))
         elif isinstance(object_, Tree):
-            dot += '\thash_%s[shape=note, fontcolor="#2a77c0", label="%s"];\n' % (object_.hash, str(object_))
+            label = ' | '.join(['<f%d> %s' % (hash(i), i.fname) for i in object_.entries])
+            dot += '\thash_%s[shape=record, fontcolor="#2a77c0", label="{%s}"];\n' % (object_.hash, label)
             for entry in object_.entries:
-                dot += '\thash_%s -> hash_%s;\n' % (object_.hash, entry.hash)
+                dot += '\thash_%s:f%d -> hash_%s;\n' % (object_.hash, hash(entry), entry.hash)
         elif isinstance(object_, Commit):
             dot += '\thash_%s[shape=box, style=filled, fillcolor=orange, label="%s"];\n' % (object_.hash, str(object_))
             for parent_hash in object_.parent:
                 dot += '\thash_%s -> hash_%s;\n' % (object_.hash, parent_hash)
             dot += '\thash_%s -> hash_%s;\n' % (object_.hash, object_.tree)
 
-    # TODO: index显示为左上角的列表
-    dot += '\tindex[shape=box, label="index"];\n'
+    label = ' | '.join(['<f%d> %s' % (hash(i), i.path) for i in index.entries])
+    dot += '\tindex[shape=record, label="{index|%s}"];\n' % (label,)
     for entry in index.entries:
-        dot += '\tindex -> hash_%s;\n' % (entry.hash)
+        dot += '\tindex:f%d -> hash_%s;\n' % (hash(entry), entry.hash)
 
     dot += '}'
 
