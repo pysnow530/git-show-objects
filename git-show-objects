@@ -10,6 +10,7 @@ import commands
 
 OBJECT_PATH = '.git/objects/'
 REFS_PATH   = '.git/refs/'
+HEAD_PATH   = '.git/HEAD'
 EXPORT_PATH = '.git/obs/'
 
 
@@ -214,15 +215,24 @@ def get_refs():
     for root, _, files in os.walk(REFS_PATH):
         for file in files:
             path = ('%s/%s' % (root, file))
-            hash_ = open(path, 'r').read()
+            hash_ = open(path, 'r').read().strip()
             ref = path[len(REFS_PATH):]
             refs.append((ref, hash_))
 
     return refs
 
 
-def objects2dot(index, objects, refs, dotfile):
-    """将对象列表及关系转换为dot文件"""
+def get_head():
+    """获取HEAD的(name, ref)对"""
+    HEAD_PREFIX = 'ref: refs/'
+    ref = open(HEAD_PATH, 'r').read().strip()[len(HEAD_PREFIX):]
+    name = 'HEAD'
+
+    return (name, ref)
+
+
+def objects2dot(index, objects, refs, head, dotfile):
+    """将对象列表及指针相互关系转换为dot文件"""
     dot = 'digraph {\n'
 
     # blob tree commit
@@ -247,8 +257,12 @@ def objects2dot(index, objects, refs, dotfile):
         dot += '\tindex:f%d -> hash_%s;\n' % (hash(entry), entry.hash)
 
     # refs
-    for name, hash_ in refs:
-        dot += '\t"%s" -> hash_%s;\n' % (name, hash_)
+    for ref_name, ref_hash in refs:
+        dot += '\t"%s" -> hash_%s;\n' % (ref_name, ref_hash)
+
+    # HEAD
+    head_name, head_ref = head
+    dot += '\t"%s" -> "%s";\n' % (head_name, head_ref)
 
     dot += '}'
 
@@ -278,7 +292,8 @@ def main(dotfile, pngfile):
     index = Index.loads()
     objects = get_objects()
     refs = get_refs()
-    objects2dot(index, objects, refs, dotfile)
+    head = get_head()
+    objects2dot(index, objects, refs, head, dotfile)
     dot2png(dotfile, pngfile)
     view(pngfile)
 
