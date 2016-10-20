@@ -184,6 +184,7 @@ class Index(object):
 
         output = commands.getoutput('git ls-files --stage')
         for line in output.split('\n'):
+            if not line: continue
             entry = cls.Entry()
             info, entry.path = line.split('\t')
             entry.mode, entry.hash, entry.stage = info.split(' ')
@@ -251,8 +252,9 @@ def objects2dot(index, objects, refs, head, dotfile):
             dot += '\thash_%s -> hash_%s;\n' % (object_.hash, object_.tree)
 
     # index
-    label = ' | '.join(['<f%d> %s' % (hash(i), i.path) for i in index.entries])
-    dot += '\tindex[shape=record, label="{index|%s}"];\n' % (label,)
+    index_items = ['<f%d> %s' % (hash(i), i.path) for i in index.entries]
+    label = ' | '.join(['index'] + index_items)
+    dot += '\tindex[shape=record, label="{%s}"];\n' % (label,)
     for entry in index.entries:
         dot += '\tindex:f%d -> hash_%s;\n' % (hash(entry), entry.hash)
 
