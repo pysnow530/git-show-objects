@@ -226,7 +226,9 @@ def get_refs():
 def get_head():
     """获取HEAD的(name, ref)对"""
     HEAD_PREFIX = 'ref: refs/'
-    ref = open(HEAD_PATH, 'r').read().strip()[len(HEAD_PREFIX):]
+    ref = open(HEAD_PATH, 'r').read().strip()
+    if ref.startswith(HEAD_PREFIX):
+        ref = ref[len(HEAD_PREFIX):]
     name = 'HEAD'
 
     return (name, ref)
@@ -239,28 +241,28 @@ def objects2dot(index, objects, refs, head, dotfile):
     # blob tree commit
     for object_ in objects:
         if isinstance(object_, Blob):
-            dot += '\thash_%s[shape=note, label="%s"];\n' % (object_.hash, str(object_))
+            dot += '\t"%s"[shape=note, label="%s"];\n' % (object_.hash, str(object_))
         elif isinstance(object_, Tree):
             label = ' | '.join(['<f%d> %s' % (hash(i), i.fname) for i in object_.entries])
-            dot += '\thash_%s[shape=record, fontcolor="#2a77c0", label="{%s}"];\n' % (object_.hash, label)
+            dot += '\t"%s"[shape=record, fontcolor="#2a77c0", label="{%s}"];\n' % (object_.hash, label)
             for entry in object_.entries:
-                dot += '\thash_%s:f%d -> hash_%s;\n' % (object_.hash, hash(entry), entry.hash)
+                dot += '\t"%s":f%d -> "%s";\n' % (object_.hash, hash(entry), entry.hash)
         elif isinstance(object_, Commit):
-            dot += '\thash_%s[shape=box, style=filled, fillcolor=orange, label="%s"];\n' % (object_.hash, str(object_))
+            dot += '\t"%s"[shape=box, style=filled, fillcolor=orange, label="%s"];\n' % (object_.hash, str(object_))
             for parent_hash in object_.parent:
-                dot += '\thash_%s -> hash_%s;\n' % (object_.hash, parent_hash)
-            dot += '\thash_%s -> hash_%s;\n' % (object_.hash, object_.tree)
+                dot += '\t"%s" -> "%s";\n' % (object_.hash, parent_hash)
+            dot += '\t"%s" -> "%s";\n' % (object_.hash, object_.tree)
 
     # index
     index_items = ['<f%d> %s' % (hash(i), i.path) for i in index.entries]
     label = ' | '.join(['index'] + index_items)
     dot += '\tindex[shape=record, label="{%s}"];\n' % (label,)
     for entry in index.entries:
-        dot += '\tindex:f%d -> hash_%s;\n' % (hash(entry), entry.hash)
+        dot += '\tindex:f%d -> "%s";\n' % (hash(entry), entry.hash)
 
     # refs
     for ref_name, ref_hash in refs:
-        dot += '\t"%s" -> hash_%s;\n' % (ref_name, ref_hash)
+        dot += '\t"%s" -> "%s";\n' % (ref_name, ref_hash)
 
     # HEAD
     head_name, head_ref = head
