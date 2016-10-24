@@ -119,7 +119,11 @@ class Tree(ImmutableObject):
         object_.entries = []
         for line in output.split('\n'):
             entry = Tree.Entry()
-            entry.mode, entry.type, info = line.split(' ', 2)
+            try:
+                entry.mode, entry.type, info = line.split(' ', 2)
+            except Exception as e:
+                logging.error(traceback.format_exc(e))
+                continue
             entry.hash, entry.fname = info.split('\t')
             logging.debug('%s: add entry %s' % (object_.hash, entry.hash))
             object_.entries.append(entry)
