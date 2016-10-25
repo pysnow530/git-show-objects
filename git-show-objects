@@ -258,7 +258,7 @@ def objects2dot(index, objects, refs, head, dotfile):
             dot += '\t"%s" -> "%s";\n' % (object_.hash, object_.tree)
 
     # index
-    index_items = ['<f%d> %s' % (hash(i), i.path) for i in index.entries]
+    index_items = ['<f%d> %s:%s' % (hash(i), i.path, i.stage) for i in index.entries]
     label = ' | '.join(['index'] + index_items)
     dot += '\tindex[shape=record, label="{%s}"];\n' % (label,)
     for entry in index.entries:
